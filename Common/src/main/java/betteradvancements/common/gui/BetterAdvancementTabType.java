@@ -1,9 +1,9 @@
 package betteradvancements.common.gui;
 
 import betteradvancements.common.reference.Resources;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.advancements.AdvancementTabType;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.List;
@@ -50,7 +50,7 @@ public class BetterAdvancementTabType {
         this.tabType = tabType;
     }
 
-    public void draw(GuiGraphics guiGraphics, int x, int y, int width, int height, boolean selected, int index) {
+    public void draw(GuiGraphicsExtractor guiGraphics, int x, int y, int width, int height, boolean selected, int index) {
         int i = this.textureX;
         index %= getMax(width, height);
 
@@ -63,10 +63,10 @@ public class BetterAdvancementTabType {
         }
 
         int j = selected ? this.textureY + this.height : this.textureY;
-        guiGraphics.blit(RenderType::guiTextured, Resources.Gui.TABS, x + this.getX(index, width, height), y + this.getY(index, width, height), i, j, this.width, this.height, 256, 256);
+        guiGraphics.blit(RenderPipelines.GUI_TEXTURED, Resources.Gui.TABS, x + this.getX(index, width, height), y + this.getY(index, width, height), i, j, this.width, this.height, 256, 256);
     }
 
-    public void drawIcon(GuiGraphics guiGraphics, int left, int top, int width, int height, int index, ItemStack stack) {
+    public void drawIcon(GuiGraphicsExtractor guiGraphics, int left, int top, int width, int height, int index, ItemStack stack) {
         int i = left + this.getX(index, width, height);
         int j = top + this.getY(index, width, height);
 
@@ -89,7 +89,7 @@ public class BetterAdvancementTabType {
             }
         }
 
-        guiGraphics.renderFakeItem(stack, i, j);
+        guiGraphics.fakeItem(stack, i, j);
     }
 
     public int getX(int index, int width, int height) {

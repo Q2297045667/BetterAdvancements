@@ -21,9 +21,12 @@ public class ConfigValues {
     public static ForgeConfigSpec.BooleanValue showDebugCoordinates;
     public static ForgeConfigSpec.BooleanValue orderTabsAlphabetically;
     public static ForgeConfigSpec.IntValue uiScaling;
+    public static ForgeConfigSpec.FloatValue defaultZoom;
 
     public static ForgeConfigSpec.ConfigValue<String> detailLevel;
     public static ForgeConfigSpec.BooleanValue requiresShift;
+    public static ForgeConfigSpec.BooleanValue colorWholeCriteriaText;
+    public static ForgeConfigSpec.IntValue criteriaRotationSpeed;
     public static ForgeConfigSpec.BooleanValue addToInventory;
 
     public static ForgeConfigSpec.BooleanValue defaultDrawDirectLines;
@@ -32,6 +35,7 @@ public class ConfigValues {
     public static ForgeConfigSpec.ConfigValue<String>  defaultUncompletedLineColor;
 
     public static ForgeConfigSpec.BooleanValue onlyUseAboveAdvancementTabs;
+    public static ForgeConfigSpec.BooleanValue keepAdvancementsTitle;
 
     public static ForgeConfigSpec build() {
         ForgeConfigSpec.Builder builder = new ForgeConfigSpec.Builder();
@@ -45,9 +49,12 @@ public class ConfigValues {
         showDebugCoordinates = builder.define("showDebugCoordinates", false);
         orderTabsAlphabetically = builder.define("orderTabsAlphabetically", false);
         uiScaling = builder.comment("Values below 50% might give odd results, use on own risk ;)").defineInRange("uiScaling", 100, 1, 100);
+        defaultZoom = builder.comment("UI zoom steps are 0.1").defineInRange("defaultZoom", 1F, 0.4F, 2F);
 
         detailLevel = builder.comment(CriteriaDetail.comments()).defineInList("criteriaDetail", CriteriaDetail.DEFAULT.getName(), CriteriaDetail.names());
         requiresShift = builder.define("criteriaDetailRequiresShift", false);
+        colorWholeCriteriaText = builder.define("colorWholeCriteriaText", false);
+        criteriaRotationSpeed = builder.defineInRange("criteriaRotationSpeed", 3, 1, 10);
         addToInventory = builder.define("addInventoryButton", false);
 
         defaultDrawDirectLines = builder.define("defaultDrawDirectLines", false);
@@ -56,6 +63,7 @@ public class ConfigValues {
         defaultUncompletedLineColor = builder.define("defaultUncompletedLineColor", "#FFFFFF");
 
         onlyUseAboveAdvancementTabs = builder.define("onlyUseAboveAdvancementTabs", false);
+        keepAdvancementsTitle = builder.define("keepAdvancementsTitle", false);
 
         return builder.build();
     }
@@ -70,9 +78,12 @@ public class ConfigValues {
         BetterAdvancementsScreen.showDebugCoordinates = showDebugCoordinates.get();
         BetterAdvancementsScreen.orderTabsAlphabetically = orderTabsAlphabetically.get();
         BetterAdvancementsScreen.uiScaling = uiScaling.get();
+        BetterAdvancementsScreen.zoom = defaultZoom.get();
 
         CriterionGrid.detailLevel = CriteriaDetail.fromName(detailLevel.get());
         CriterionGrid.requiresShift = requiresShift.get();
+        CriterionGrid.colorWholeCriteriaText = colorWholeCriteriaText.get();
+        CriterionGrid.criteriaRotationSpeed = criteriaRotationSpeed.get();
         BetterAdvancementsScreenButton.addToInventory = addToInventory.get();
 
         BetterDisplayInfo.defaultDrawDirectLines = defaultDrawDirectLines.get();
@@ -81,5 +92,6 @@ public class ConfigValues {
         BetterDisplayInfo.defaultUncompletedLineColor = ColorHelper.RGB(defaultUncompletedLineColor.get());
 
         BetterAdvancementTabType.onlyUseAbove = onlyUseAboveAdvancementTabs.get();
+        BetterAdvancementsScreen.keepAdvancementsTitle = keepAdvancementsTitle.get();
     }
 }

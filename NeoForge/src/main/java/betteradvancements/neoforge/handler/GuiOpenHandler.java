@@ -28,7 +28,7 @@ public class GuiOpenHandler {
         if (event.getScreen() instanceof AdvancementsScreen) {
             event.setCanceled(true);
             Minecraft mc = Minecraft.getInstance();
-            mc.setScreen(new BetterAdvancementsScreen(mc.player.connection.getAdvancements()));
+            mc.setScreenAndShow(new BetterAdvancementsScreen(mc.player.connection.getAdvancements()));
         }
     }
 
@@ -37,7 +37,7 @@ public class GuiOpenHandler {
         if (event.getScreen() instanceof InventoryScreen) {
             if (BetterAdvancementsScreenButton.addToInventory) {
                 InventoryScreen guiInventory = (InventoryScreen) event.getScreen();
-                event.addListener(new BetterAdvancementsScreenButton(guiInventory.getGuiLeft() + guiInventory.getXSize(), guiInventory.getGuiTop(), Component.literal("BA")));
+                event.addListener(new BetterAdvancementsScreenButton(guiInventory.getLeftPos() + guiInventory.getImageWidth(), guiInventory.getTopPos(), Component.literal("BA")));
             }
         }
     }
@@ -48,7 +48,7 @@ public class GuiOpenHandler {
             if (BetterAdvancementsScreen.orderTabsAlphabetically) {
                 Minecraft mc = Minecraft.getInstance();
                 ClientAdvancements clientAdvancements = mc.player.connection.getAdvancements();
-                AdvancementTree advancementTree = clientAdvancements.getTree();
+                AdvancementTree advancementTree = clientAdvancements.tree();
                 Set<AdvancementNode> roots = (Set<AdvancementNode>) advancementTree.roots();
 
                 List<String> advancementLocations = roots.stream().sorted(AdvancementComparer.sortByTitle()).map(n -> n.holder().id().toString()).toList();

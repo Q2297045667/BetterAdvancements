@@ -10,10 +10,7 @@ import betteradvancements.common.util.CriteriaDetail;
 import betteradvancements.common.util.CriterionGrid;
 import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
-import me.shedaniel.clothconfig2.gui.entries.BooleanListEntry;
-import me.shedaniel.clothconfig2.gui.entries.ColorEntry;
-import me.shedaniel.clothconfig2.gui.entries.DropdownBoxEntry;
-import me.shedaniel.clothconfig2.gui.entries.IntegerSliderEntry;
+import me.shedaniel.clothconfig2.gui.entries.*;
 import net.minecraft.network.chat.Component;
 
 public class ConfigValues {
@@ -27,9 +24,12 @@ public class ConfigValues {
     public static BooleanListEntry showDebugCoordinates;
     public static BooleanListEntry orderTabsAlphabetically;
     public static IntegerSliderEntry uiScaling;
+    public static FloatListEntry defaultZoom;
 
     public static DropdownBoxEntry<CriteriaDetail> detailLevel;
     public static BooleanListEntry requiresShift;
+    public static BooleanListEntry colorWholeCriteriaText;
+    public static IntegerSliderEntry criteriaRotationSpeed;
     public static BooleanListEntry addToInventory;
 
     public static BooleanListEntry defaultDrawDirectLines;
@@ -38,6 +38,7 @@ public class ConfigValues {
     public static ColorEntry defaultUncompletedLineColor;
 
     public static BooleanListEntry onlyUseAboveAdvancementTabs;
+    public static BooleanListEntry keepAdvancementsTitle;
 
     public static void build(ConfigCategory category, ConfigEntryBuilder builder) {
         defaultUncompletedIconColor = builder.startAlphaColorField(Component.literal("defaultUncompletedIconColor"), BetterDisplayInfo.defaultUncompletedIconColor)
@@ -82,6 +83,14 @@ public class ConfigValues {
             .setSaveConsumer(newValue -> BetterAdvancementsScreen.uiScaling = newValue)
             .build();
         category.addEntry(uiScaling);
+        defaultZoom = builder.startFloatField(Component.literal("defaultZoom"), BetterAdvancementsScreen.zoom)
+                .setTooltip(Component.literal("UI zoom steps are 0.1"))
+                .setDefaultValue(1F)
+                .setMin(BetterAdvancementsScreen.MIN_ZOOM)
+                .setMax(BetterAdvancementsScreen.MAX_ZOOM)
+                .setSaveConsumer(newValue -> BetterAdvancementsScreen.zoom = newValue)
+                .build();
+        category.addEntry(defaultZoom);
 
         detailLevel = builder.startDropdownMenu(Component.literal("criteriaDetail"),
                 CriterionGrid.detailLevel, CriteriaDetail::fromName, o -> (Component.literal(o.getName()))
@@ -97,6 +106,16 @@ public class ConfigValues {
             .setSaveConsumer(newValue -> CriterionGrid.requiresShift = newValue)
             .build();
         category.addEntry(requiresShift);
+        colorWholeCriteriaText = builder.startBooleanToggle(Component.literal("colorWholeCriteriaText"), CriterionGrid.colorWholeCriteriaText)
+                .setDefaultValue(false)
+                .setSaveConsumer(newValue -> CriterionGrid.colorWholeCriteriaText = newValue)
+                .build();
+        category.addEntry(colorWholeCriteriaText);
+        criteriaRotationSpeed = builder.startIntSlider(Component.literal("criteriaRotationSpeed"), CriterionGrid.criteriaRotationSpeed, 1, 10)
+                .setDefaultValue(3)
+                .setSaveConsumer(newValue -> CriterionGrid.criteriaRotationSpeed = newValue)
+                .build();
+        category.addEntry(criteriaRotationSpeed);
         addToInventory = builder.startBooleanToggle(Component.literal("addInventoryButton"), BetterAdvancementsScreenButton.addToInventory)
             .setDefaultValue(false)
             .setSaveConsumer(newValue -> BetterAdvancementsScreenButton.addToInventory = newValue)
@@ -129,5 +148,11 @@ public class ConfigValues {
             .setSaveConsumer(newValue -> BetterAdvancementTabType.onlyUseAbove = newValue)
             .build();
         category.addEntry(onlyUseAboveAdvancementTabs);
+
+        keepAdvancementsTitle = builder.startBooleanToggle(Component.literal("keepAdvancementsTitle"), BetterAdvancementsScreen.keepAdvancementsTitle)
+            .setDefaultValue(true)
+            .setSaveConsumer(newValue -> BetterAdvancementsScreen.keepAdvancementsTitle = newValue)
+            .build();
+        category.addEntry(keepAdvancementsTitle);
     }
 }

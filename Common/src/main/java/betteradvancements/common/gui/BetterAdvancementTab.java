@@ -3,26 +3,28 @@ package betteradvancements.common.gui;
 import betteradvancements.common.advancements.BetterDisplayInfo;
 import betteradvancements.common.advancements.BetterDisplayInfoRegistry;
 import com.google.common.collect.Maps;
+import com.mojang.datafixers.util.Pair;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.advancements.AdvancementNode;
 import net.minecraft.advancements.DisplayInfo;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
+import net.minecraft.client.gui.screens.advancements.AdvancementTab;
+import net.minecraft.client.renderer.RenderPipelines;
+import net.minecraft.client.renderer.texture.MissingTextureAtlasSprite;
 import net.minecraft.client.renderer.texture.TextureManager;
+import net.minecraft.core.ClientAsset;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
-import net.minecraft.util.Tuple;
 import net.minecraft.world.item.ItemStack;
 
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 
 public class BetterAdvancementTab {
     public static boolean doFade = true;
-    public static final Map<AdvancementHolder, Tuple<Integer, Integer>> scrollHistory = Maps.newLinkedHashMap();
+    public static final Map<AdvancementHolder, Pair<Integer, Integer>> scrollHistory = Maps.newLinkedHashMap();
 
     private final Minecraft minecraft;
     private final BetterAdvancementsScreen screen;
@@ -49,8 +51,8 @@ public class BetterAdvancementTab {
         this.index = index;
         this.rootNode = advancementNode;
         this.display = displayInfo;
-        this.icon = displayInfo.getIcon();
-        this.title = displayInfo.getTitle();
+        this.icon = displayInfo.icon().create();
+        this.title = displayInfo.title();
         this.betterDisplayInfos = new BetterDisplayInfoRegistry(advancementNode);
         this.root = new BetterAdvancementWidget(this, mc, advancementNode, displayInfo);
         this.addWidget(this.root, advancementNode.holder());
@@ -60,19 +62,23 @@ public class BetterAdvancementTab {
         return this.rootNode;
     }
 
+    public AdvancementHolder getRootHolder() {
+        return this.rootNode.holder();
+    }
+
     public Component getTitle() {
         return this.title;
     }
 
-    public void drawTab(GuiGraphics guiGraphics, int left, int top, int width, int height, boolean selected) {
+    public void drawTab(GuiGraphicsExtractor guiGraphics, int left, int top, int width, int height, boolean selected) {
         this.type.draw(guiGraphics, left, top, width, height, selected, this.index);
     }
 
-    public void drawIcon(GuiGraphics guiGraphics, int left, int top,int width, int height) {
+    public void drawIcon(GuiGraphicsExtractor guiGraphics, int left, int top,int width, int height) {
         this.type.drawIcon(guiGraphics, left, top, width, height, this.index, this.icon);
     }
 
-    public void drawContents(GuiGraphics guiGraphics, int left, int top, int width, int height) {
+    public void drawContents(GuiGraphicsExtractor guiGraphics, int left, int top, int width, int height, float zoom) {
         if (!this.centered) {
             this.scrollX = (width - (this.maxX + this.minX)) / 2;
             this.scrollY = (height - (this.maxY + this.minY)) / 2;
@@ -80,9 +86,9 @@ public class BetterAdvancementTab {
         }
 
         guiGraphics.enableScissor(left, top, left + width, top + height);
-        guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(left, top, 0);
-        ResourceLocation resourcelocation = this.display.getBackground().orElse(TextureManager.INTENTIONAL_MISSING_TEXTURE);
+        guiGraphics.pose().pushMatrix();
+        guiGraphics.pose().translate(left, top);
+        Identifier resourcelocation = this.display.background().map(ClientAsset.ResourceTexture::texturePath).orElse(MissingTextureAtlasSprite.getLocation());
 
         int i = this.scrollX % 16;
         int j = this.scrollY % 16;
@@ -91,36 +97,32 @@ public class BetterAdvancementTab {
         for (; k <= 1 + width / 16; k++) {
             int l = -1;
             for (;l <= height / 16; l++) {
-                guiGraphics.blit(RenderType::guiTextured, resourcelocation, i + 16 * k, j + 16 * l, 0.0F, 0.0F, 16, 16, 16, 16);
+                guiGraphics.blit(RenderPipelines.GUI_TEXTURED, resourcelocation, i + 16 * k, j + 16 * l, 0.0F, 0.0F, 16, 16, 16, 16);
             }
-            guiGraphics.blit(RenderType::guiTextured, resourcelocation, i + 16 * k, j + 16 * l, 0.0F, 0.0F, 16, height % 16, 16, 16);
+            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, resourcelocation, i + 16 * k, j + 16 * l, 0.0F, 0.0F, 16, height % 16, 16, 16);
         }
 
-
+        guiGraphics.pose().scale(zoom, zoom);
         this.root.drawConnectivity(guiGraphics, this.scrollX, this.scrollY, true);
         this.root.drawConnectivity(guiGraphics, this.scrollX, this.scrollY, false);
         this.root.draw(guiGraphics, this.scrollX, this.scrollY);
-        guiGraphics.pose().popPose();
+        guiGraphics.pose().popMatrix();
         guiGraphics.disableScissor();
     }
 
-    public void drawToolTips(GuiGraphics guiGraphics, int mouseX, int mouseY, int left, int top, int width, int height) {
-        guiGraphics.pose().pushPose();
-        guiGraphics.pose().translate(0.0D, 0.0D, -200.0D);
+    public void drawToolTips(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, int left, int top, int width, int height, float zoom) {
         guiGraphics.fill(0, 0, width, height, Mth.floor(this.fade * 255.0F) << 24);
         boolean flag = false;
 
         if (mouseX > 0 && mouseX < width && mouseY > 0 && mouseY < height) {
             for (BetterAdvancementWidget betterAdvancementWidget : this.widgets.values()) {
-                if (betterAdvancementWidget.isMouseOver(this.scrollX, this.scrollY, mouseX, mouseY)) {
+                if (betterAdvancementWidget.isMouseOver(this.scrollX, this.scrollY, mouseX, mouseY, zoom)) {
                     flag = true;
-                    betterAdvancementWidget.drawHover(guiGraphics, this.scrollX, this.scrollY, this.fade, left, top);
+                    betterAdvancementWidget.drawHover(guiGraphics, this.scrollX, this.scrollY, this.fade, left, top, zoom);
                     break;
                 }
             }
         }
-
-        guiGraphics.pose().popPose();
 
         if (doFade && flag) {
             this.fade = Mth.clamp(this.fade + 0.02F, 0.0F, 0.3F);
@@ -195,15 +197,33 @@ public class BetterAdvancementTab {
     }
 
     public void storeScroll() {
-        scrollHistory.put(this.rootNode.holder(), new Tuple<>(scrollX, scrollY));
+        scrollHistory.put(this.rootNode.holder(), Pair.of(scrollX, scrollY));
     }
 
-    public void loadScroll() {
-        Tuple<Integer, Integer> scroll = scrollHistory.get(this.rootNode.holder());
+    public void loadScroll(int width, int height) {
+        Pair<Integer, Integer> scroll = scrollHistory.get(this.rootNode.holder());
         if (scroll != null) {
             this.centered = true;
-            this.scrollX = scroll.getA();
-            this.scrollY = scroll.getB();
+            this.scrollX = scroll.getFirst();
+            this.scrollY = scroll.getSecond();
+
+            if (this.maxX - this.minX > width) {
+                this.scrollX = Mth.clamp(this.scrollX, -(this.maxX - width), -this.minX);
+            }
+
+            if (this.maxY - this.minY > height) {
+                this.scrollY = Mth.clamp(this.scrollY, -(this.maxY - height), -this.minY);
+            }
         }
+    }
+
+    public void copyPosition(final BetterAdvancementTab source) {
+        this.scrollX = source.scrollX;
+        this.scrollY = source.scrollY;
+        this.minX = source.minX;
+        this.minY = source.minY;
+        this.maxX = source.maxX;
+        this.maxY = source.maxY;
+        this.centered = source.centered;
     }
 }
